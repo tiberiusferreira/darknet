@@ -399,6 +399,7 @@ void visualize(char *cfgfile, char *weightfile)
 
 int main(int argc, char **argv)
 {
+
     //test_resize("data/bad.jpg");
     //test_box();
     //test_convolutional_layer();
@@ -411,6 +412,7 @@ int main(int argc, char **argv)
         gpu_index = -1;
     }
 
+
 #ifndef GPU
     gpu_index = -1;
 #else
@@ -418,6 +420,7 @@ int main(int argc, char **argv)
         cuda_set_device(gpu_index);
     }
 #endif
+
 
     if (0 == strcmp(argv[1], "average")){
         average(argc, argv);

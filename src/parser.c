@@ -187,6 +187,7 @@ convolutional_layer parse_convolutional(list *options, size_params params)
     if(pad) padding = size/2;
 
     char *activation_s = option_find_str(options, "activation", "logistic");
+
     ACTIVATION activation = get_activation(activation_s);
 
     int batch,h,w,c;
@@ -200,6 +201,7 @@ convolutional_layer parse_convolutional(list *options, size_params params)
     int xnor = option_find_int_quiet(options, "xnor", 0);
 
     convolutional_layer layer = make_convolutional_layer(batch,h,w,c,n,groups,size,stride,padding,activation, batch_normalize, binary, xnor, params.net->adam);
+
     layer.flipped = option_find_int_quiet(options, "flipped", 0);
     layer.dot = option_find_float_quiet(options, "dot", 0);
 
@@ -765,14 +767,16 @@ network *parse_network_cfg(char *filename)
     n = n->next;
     int count = 0;
     free_section(s);
-    fprintf(stderr, "layer     filters    size              input                output\n");
+    //fprintf(stderr, "layer     filters    size              input                output\n");
+
     while(n){
         params.index = count;
-        fprintf(stderr, "%5d ", count);
+        //fprintf(stderr, "%5d ", count);
         s = (section *)n->val;
         options = s->options;
         layer l = {0};
         LAYER_TYPE lt = string_to_layer_type(s->type);
+        //printf("Layer type is %s", s->type);
         if(lt == CONVOLUTIONAL){
             l = parse_convolutional(options, params);
         }else if(lt == DECONVOLUTIONAL){
@@ -837,6 +841,8 @@ network *parse_network_cfg(char *filename)
         }else{
             fprintf(stderr, "Type not recognized: %s\n", s->type);
         }
+
+
         l.clip = net->clip;
         l.truth = option_find_int_quiet(options, "truth", 0);
         l.onlyforward = option_find_int_quiet(options, "onlyforward", 0);
@@ -848,6 +854,7 @@ network *parse_network_cfg(char *filename)
         l.learning_rate_scale = option_find_float_quiet(options, "learning_rate", 1);
         l.smooth = option_find_float_quiet(options, "smooth", 0);
         option_unused(options);
+
         net->layers[count] = l;
         if (l.workspace_size > workspace_size) workspace_size = l.workspace_size;
         free_section(s);
@@ -860,6 +867,7 @@ network *parse_network_cfg(char *filename)
             params.inputs = l.outputs;
         }
     }
+
     free_list(sections);
     layer out = get_network_output_layer(net);
     net->outputs = out.outputs;
@@ -1222,7 +1230,7 @@ void load_weights_upto(network *net, char *filename, int start, int cutoff)
         cuda_set_device(net->gpu_index);
     }
 #endif
-    fprintf(stderr, "Loading weights from %s...", filename);
+    //fprintf(stderr, "Loading weights from %s...", filename);
     fflush(stdout);
     FILE *fp = fopen(filename, "rb");
     if(!fp) file_error(filename);
@@ -1301,7 +1309,7 @@ void load_weights_upto(network *net, char *filename, int start, int cutoff)
 #endif
         }
     }
-    fprintf(stderr, "Done!\n");
+    //fprintf(stderr, "Done!\n");
     fclose(fp);
 }
 

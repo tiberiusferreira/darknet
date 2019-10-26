@@ -89,8 +89,8 @@ void print_yolo_detections(FILE **fps, char *id, int total, int classes, int w, 
         if (ymax > h) ymax = h;
 
         for(j = 0; j < classes; ++j){
-            if (dets[i].prob[j]) fprintf(fps[j], "%s %f %f %f %f %f\n", id, dets[i].prob[j],
-                    xmin, ymin, xmax, ymax);
+            //if (dets[i].prob[j]) fprintf(fps[j], "%s %f %f %f %f %f\n", id, dets[i].prob[j],
+            //        xmin, ymin, xmax, ymax);
         }
     }
 }
