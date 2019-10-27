@@ -45,10 +45,11 @@ char *get_activation_string(ACTIVATION a)
 ACTIVATION get_activation(char *s)
 {
     if (strcmp(s, "logistic")==0) return LOGISTIC;
+    if (strcmp(s, "swish") == 0) return SWISH;
     if (strcmp(s, "loggy")==0) return LOGGY;
     if (strcmp(s, "relu")==0) return RELU;
     if (strcmp(s, "elu")==0) return ELU;
-    if (strcmp(s, "selu")==0) return SELU;
+    if (strcmp(s, "selu") == 0) return SELU;
     if (strcmp(s, "relie")==0) return RELIE;
     if (strcmp(s, "plse")==0) return PLSE;
     if (strcmp(s, "hardtan")==0) return HARDTAN;
@@ -100,8 +101,35 @@ float activate(float x, ACTIVATION a)
 void activate_array(float *x, const int n, const ACTIVATION a)
 {
     int i;
-    for(i = 0; i < n; ++i){
-        x[i] = activate(x[i], a);
+    if (a == LINEAR) {}
+    else if (a == LEAKY) {
+        #pragma omp parallel for
+        for (i = 0; i < n; ++i) {
+            x[i] = leaky_activate(x[i]);
+        }
+    }
+    else if (a == LOGISTIC) {
+        #pragma omp parallel for
+        for (i = 0; i < n; ++i) {
+            x[i] = logistic_activate(x[i]);
+        }
+    }
+    else {
+        for (i = 0; i < n; ++i) {
+            x[i] = activate(x[i], a);
+        }
+    }
+}
+
+void activate_array_swish(float *x, const int n, float * output_sigmoid, float * output)
+{
+    int i;
+    #pragma omp parallel for
+    for (i = 0; i < n; ++i) {
+        float x_val = x[i];
+        float sigmoid = logistic_activate(x_val);
+        output_sigmoid[i] = sigmoid;
+        output[i] = x_val * sigmoid;
     }
 }
 
@@ -143,8 +171,19 @@ float gradient(float x, ACTIVATION a)
 void gradient_array(const float *x, const int n, const ACTIVATION a, float *delta)
 {
     int i;
+    #pragma omp parallel for
     for(i = 0; i < n; ++i){
         delta[i] *= gradient(x[i], a);
     }
-} 
+}
 
+// https://github.com/BVLC/caffe/blob/04ab089db018a292ae48d51732dd6c66766b36b6/src/caffe/layers/swish_layer.cpp#L54-L56
+void gradient_array_swish(const float *x, const int n, const float * sigmoid, float * delta)
+{
+    int i;
+    #pragma omp parallel for
+    for (i = 0; i < n; ++i) {
+        float swish = x[i];
+        delta[i] *= swish + sigmoid[i]*(1 - swish);
+    }
+}
