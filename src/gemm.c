@@ -1979,15 +1979,23 @@ void gemm_nn(int M, int N, int K, float ALPHA,
     float *B, int ldb,
     float *C, int ldc)
 {
+
+    // Calculate the time taken by fun()
+//    clock_t t;
+//    t = clock();
     int i, j, k;
     for (i = 0; i < M; ++i) {
         for (k = 0; k < K; ++k) {
-            PUT_IN_REGISTER float A_PART = ALPHA * A[i * lda + k];
+            PUT_IN_REGISTER float A_PART = ALPHA * A[i * lda + k]; //A[M*lda + K]
             for (j = 0; j < N; ++j) {
                 C[i*ldc + j] += A_PART*B[k*ldb + j];
             }
         }
     }
+//    t = clock() - t;
+//    double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
+//
+//    printf("fun() took %f seconds to execute \n", time_taken);
 }
 
 void gemm_nn_fast(int M, int N, int K, float ALPHA,
@@ -2650,13 +2658,24 @@ void gemm_tt(int M, int N, int K, float ALPHA,
     }
 }
 
-
+extern void gemm_nn_rust(int N, int K, float ALPHA,
+             float *A, int lda,
+             float *B, int ldb,
+             float *C, int ldc);
 void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA,
         float *A, int lda,
         float *B, int ldb,
         float BETA,
         float *C, int ldc)
 {
+
+    clock_t t;
+    t = clock();
+
+
+
+
+
     //printf("cpu: %d %d %d %d %d %f %d %d %f %d\n",TA, TB, M, N, K, ALPHA, lda, ldb, BETA, ldc);
     if (BETA != 1){
         int i, j;
@@ -2674,17 +2693,31 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA,
     else {
         int t;
         #pragma omp parallel for
-        for (t = 0; t < M; ++t) {
-            if (!TA && !TB)
-                gemm_nn(1, N, K, ALPHA, A + t*lda, lda, B, ldb, C + t*ldc, ldc);
-            else if (TA && !TB)
+        for (t = 0; t < M; ++t)  {
+            if (!TA && !TB){
+//                printf("1");
+//                gemm_nn(1, N, K, ALPHA,  A + t*lda, lda, B, ldb, C + t*ldc, ldc);
+                gemm_nn_rust(N, K, ALPHA, A + t*lda, lda, B, ldb, C + t*ldc, ldc);
+            }
+            else if (TA && !TB){
+                printf("2");
                 gemm_tn(1, N, K, ALPHA, A + t, lda, B, ldb, C + t*ldc, ldc);
-            else if (!TA && TB)
+            }
+            else if (!TA && TB){
+                printf("3");
                 gemm_nt(1, N, K, ALPHA, A + t*lda, lda, B, ldb, C + t*ldc, ldc);
-            else
+            }
+            else{
+                printf("4");
                 gemm_tt(1, N, K, ALPHA, A + t, lda, B, ldb, C + t*ldc, ldc);
+            }
         }
     }
+
+    t = clock() - t;
+    double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
+
+//    printf("%f\n", time_taken);
 }
 
 #ifdef GPU
