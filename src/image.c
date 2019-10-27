@@ -199,6 +199,27 @@ void draw_box(image a, int x1, int y1, int x2, int y2, float r, float g, float b
     }
 }
 
+void fill_box(image a, int x1, int y1, int x2, int y2, float r, float g, float b)
+{
+    if(x1 < 0) x1 = 0;
+    if(x1 >= a.w) x1 = a.w-1;
+    if(x2 < 0) x2 = 0;
+    if(x2 >= a.w) x2 = a.w-1;
+
+    if(y1 < 0) y1 = 0;
+    if(y1 >= a.h) y1 = a.h-1;
+    if(y2 < 0) y2 = 0;
+    if(y2 >= a.h) y2 = a.h-1;
+
+    for(int i = x1; i <= x2; ++i){
+        for(int j = y1; j <= y2; ++j){
+            a.data[i + j*a.w + 0*a.w*a.h] = r;
+            a.data[i + j*a.w + 1*a.w*a.h] = g;
+            a.data[i + j*a.w + 2*a.w*a.h] = b;
+        }
+    }
+}
+
 void draw_box_width(image a, int x1, int y1, int x2, int y2, int w, float r, float g, float b)
 {
     int i;
@@ -239,6 +260,7 @@ image **load_alphabet()
 void draw_detections(image im, detection *dets, int num, float thresh, char **names, image **alphabet, int classes)
 {
     int i,j;
+    printf("label, confidence, left, top, right, bottom\n");
     for(i = 0; i < num; ++i){
 
         char labelstr[4096] = {0};
@@ -278,13 +300,10 @@ void draw_detections(image im, detection *dets, int num, float thresh, char **na
             float blue = get_color(0,offset,classes);
             float rgb[3];
 
-            //width = prob*20+2;
-
             rgb[0] = red;
             rgb[1] = green;
             rgb[2] = blue;
             box b = dets[i].bbox;
-            //printf("%f %f %f %f\n", b.x, b.y, b.w, b.h);
 
             int left  = (b.x-b.w/2.)*im.w;
             int right = (b.x+b.w/2.)*im.w;
@@ -295,20 +314,17 @@ void draw_detections(image im, detection *dets, int num, float thresh, char **na
             if(right > im.w-1) right = im.w-1;
             if(top < 0) top = 0;
             if(bot > im.h-1) bot = im.h-1;
-
-            //width = right - left;
-            int box_width = right - left;
-            printf("%d\n", box_width);
-            if (box_width!=2468){
-                draw_box_width(im, left, top, right, bot, box_width, red, green, blue);
-            }
+            fill_box(im, left, top, right, bot, red, green, blue);
             if (alphabet) {
                 image label = get_label(alphabet, labelstr, (im.h*.03));
-                printf("label, confidence, left, top, right, bottom\n");
+                /*
+                 * label, confidence, left, top, right, bottom
+                 * backpack, 53,      1679, 1796, 1763, 1941
+                */
+
                 printf("%s, %.0f, %d, %d, %d, %d\n", labelstr, prob, left, top, right, bot);
                 draw_label(im, top + width, left, label, rgb);
                 free_image(label);
-
             }
             if (dets[i].mask){
                 image mask = float_to_image(14, 14, 1, dets[i].mask);
