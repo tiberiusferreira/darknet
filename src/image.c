@@ -304,6 +304,27 @@ int compare_by_probs(const void *a_ptr, const void *b_ptr) {
     return delta < 0 ? -1 : delta > 0 ? 1 : 0;
 }
 
+void fill_box(image a, int x1, int y1, int x2, int y2, float r, float g, float b)
+{
+    if(x1 < 0) x1 = 0;
+    if(x1 >= a.w) x1 = a.w-1;
+    if(x2 < 0) x2 = 0;
+    if(x2 >= a.w) x2 = a.w-1;
+
+    if(y1 < 0) y1 = 0;
+    if(y1 >= a.h) y1 = a.h-1;
+    if(y2 < 0) y2 = 0;
+    if(y2 >= a.h) y2 = a.h-1;
+
+    for(int i = x1; i <= x2; ++i){
+        for(int j = y1; j <= y2; ++j){
+            a.data[i + j*a.w + 0*a.w*a.h] = r;
+            a.data[i + j*a.w + 1*a.w*a.h] = g;
+            a.data[i + j*a.w + 2*a.w*a.h] = b;
+        }
+    }
+}
+
 void draw_detections_v3(image im, detection *dets, int num, float thresh, char **names, image **alphabet, int classes, int ext_output)
 {
     printf("label, confidence, left, top, right, bottom\n");
@@ -407,7 +428,7 @@ void draw_detections_v3(image im, detection *dets, int num, float thresh, char *
                 draw_box_width_bw(im, left, top, right, bot, width, 0.8);    // 1 channel Black-White
             }
             else {
-                draw_box_width(im, left, top, right, bot, width, red, green, blue); // 3 channels RGB
+                fill_box(im, left, top, right, bot, red, green, blue); // 3 channels RGB
             }
             if (alphabet) {
                 char labelstr[4096] = { 0 };
