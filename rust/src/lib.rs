@@ -80,14 +80,14 @@ mod tests {
             gemm_nn_rust_unsafe(a.n, a.k, a.alpha, a.a.as_ptr(), a.lda, a.b.as_ptr(),
                                 a.ldb, a.c.as_ptr(), a.ldc);
         }
-        let single = start.elapsed().as_millis();
+        let non_simd = start.elapsed().as_millis();
         let start = Instant::now();
         for _i in 0..nb_iter {
             gemm_nn_rust_simd(a.n, a.k, a.alpha, a.a.as_ptr(), a.lda, a.b.as_ptr(),
                               a.ldb, a.c.as_ptr(), a.ldc);
         }
         let simd = start.elapsed().as_millis();
-        println!("Single: {}; SIMD: {}", single, simd);
+        println!("Time for {} iterations. Non SIMD: {}ms; SIMD: {}ms", nb_iter, non_simd, simd);
     }
 }
 #[no_mangle]
