@@ -51,12 +51,17 @@ ifeq ($(LIBSO), 1)
 LIBNAMESO=libdarknet.so
 APPNAMESO=uselib
 endif
-
 CC=gcc
 CPP=g++
 NVCC=nvcc
 OPTS=-Ofast
-LDFLAGS= -lm -pthread -lrust -L.
+
+
+current_dir = $(CURDIR)/rust/target/release/
+
+
+
+LDFLAGS= -lm -pthread -lrust -L$(current_dir)
 COMMON= -Iinclude/ -I3rdparty/stb/include
 CFLAGS=-Wall -Wfatal-errors -Wno-unused-result -Wno-unknown-pragmas -fPIC
 

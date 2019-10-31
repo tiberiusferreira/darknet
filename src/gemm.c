@@ -1979,23 +1979,15 @@ void gemm_nn(int M, int N, int K, float ALPHA,
     float *B, int ldb,
     float *C, int ldc)
 {
-
-    // Calculate the time taken by fun()
-//    clock_t t;
-//    t = clock();
     int i, j, k;
     for (i = 0; i < M; ++i) {
         for (k = 0; k < K; ++k) {
-            PUT_IN_REGISTER float A_PART = ALPHA * A[i * lda + k]; //A[M*lda + K]
+            PUT_IN_REGISTER float A_PART = ALPHA * A[i * lda + k];
             for (j = 0; j < N; ++j) {
                 C[i*ldc + j] += A_PART*B[k*ldb + j];
             }
         }
     }
-//    t = clock() - t;
-//    double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
-//
-//    printf("fun() took %f seconds to execute \n", time_taken);
 }
 
 void gemm_nn_fast(int M, int N, int K, float ALPHA,
@@ -2658,10 +2650,26 @@ void gemm_tt(int M, int N, int K, float ALPHA,
     }
 }
 
-extern void gemm_nn_rust(int N, int K, float ALPHA,
+
+
+extern void gemm_nn_rust_safe(int N, int K, float ALPHA,
              float *A, int lda,
              float *B, int ldb,
              float *C, int ldc);
+
+
+extern void gemm_nn_rust_unsafe(int N, int K, float ALPHA,
+                              float *A, int lda,
+                              float *B, int ldb,
+                              float *C, int ldc);
+
+
+extern void gemm_nn_rust_simd(int N, int K, float ALPHA,
+                                  float *A, int lda,
+                                  float *B, int ldb,
+                                  float *C, int ldc);
+
+
 void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA,
         float *A, int lda,
         float *B, int ldb,
@@ -2696,8 +2704,8 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA,
         for (t = 0; t < M; ++t)  {
             if (!TA && !TB){
 //                printf("1");
-//                gemm_nn(1, N, K, ALPHA,  A + t*lda, lda, B, ldb, C + t*ldc, ldc);
-                gemm_nn_rust(N, K, ALPHA, A + t*lda, lda, B, ldb, C + t*ldc, ldc);
+                gemm_nn(1, N, K, ALPHA,  A + t*lda, lda, B, ldb, C + t*ldc, ldc);
+//                gemm_nn_rust_simd(N, K, ALPHA, A + t*lda, lda, B, ldb, C + t*ldc, ldc);
             }
             else if (TA && !TB){
                 printf("2");
@@ -2717,7 +2725,7 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA,
     t = clock() - t;
     double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
 
-//    printf("%f\n", time_taken);
+    printf("Time inside loop: %f\n", time_taken);
 }
 
 #ifdef GPU

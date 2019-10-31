@@ -1,1 +1,0 @@
-{"rustc":8643049039503071583,"features":"[]","target":5560141834451627718,"profile":2574335274271406459,"path":10549610305067394789,"deps":[],"local":[{"CheckDepInfo":{"dep_info":"release/.fingerprint/cfg-if-3d42405bfd19d71b/dep-lib-cfg_if-3d42405bfd19d71b"}}],"rustflags":["-C","target-cpu=native","-C","target-feature=+sse3,+avx"],"metadata":8462187951337715540}

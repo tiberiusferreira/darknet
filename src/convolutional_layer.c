@@ -969,6 +969,9 @@ void forward_convolutional_layer(convolutional_layer l, network_state state)
     int out_w = convolutional_out_width(l);
     int i, j;
 
+    clock_t t;
+    t = clock();
+
     fill_cpu(l.outputs*l.batch, 0, l.output, 1);
 
     if (l.xnor && (!l.align_bit_weights || state.train)) {
@@ -1170,6 +1173,11 @@ void forward_convolutional_layer(convolutional_layer l, network_state state)
         //simple_copy_ongpu(l.outputs*l.batch, l.output, l.input_antialiasing);
         memcpy(l.output, l.input_layer->output, l.input_layer->outputs * l.input_layer->batch * sizeof(float));
     }
+
+    t = clock() - t;
+    double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
+
+    printf("Time inside forward_convolutional_layer loop: %f\n", time_taken);
 }
 
 void assisted_excitation_forward(convolutional_layer l, network_state state)
