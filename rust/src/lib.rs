@@ -68,7 +68,7 @@ mod tests {
     fn bench() {
         println!("Start");
 
-        let file_path = "./test.json";
+        let file_path = "./test.bin";
 
         let file = File::open(file_path).unwrap();
         let a: Data = bincode::deserialize_from(&file).unwrap();
@@ -271,7 +271,7 @@ pub extern "C" fn gemm_nn_rust_safe_save_to_file_n_panic(n: usize, k: usize, alp
 
     let encoded: Vec<u8> = bincode::serialize(&new).unwrap();
 
-    let file_path = "./test.json";
+    let file_path = "./test.bin";
 
     let mut file = File::create(file_path).unwrap();
     file.write_all(&encoded).unwrap();
