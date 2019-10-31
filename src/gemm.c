@@ -2669,6 +2669,11 @@ extern void gemm_nn_rust_simd(int N, int K, float ALPHA,
                                   float *B, int ldb,
                                   float *C, int ldc);
 
+extern void gemm_nn_rust_safe_save_to_file_n_panic(int N, int K, float ALPHA,
+                              float *A, int lda,
+                              float *B, int ldb,
+                              float *C, int ldc);
+
 
 void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA,
         float *A, int lda,
@@ -2704,8 +2709,12 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA,
         for (t = 0; t < M; ++t)  {
             if (!TA && !TB){
 //                printf("1");
-                gemm_nn(1, N, K, ALPHA,  A + t*lda, lda, B, ldb, C + t*ldc, ldc);
+//                gemm_nn(1, N, K, ALPHA,  A + t*lda, lda, B, ldb, C + t*ldc, ldc);
 //                gemm_nn_rust_simd(N, K, ALPHA, A + t*lda, lda, B, ldb, C + t*ldc, ldc);
+//                gemm_nn_rust_safe(N, K, ALPHA, A + t*lda, lda, B, ldb, C + t*ldc, ldc);
+                gemm_nn_rust_safe_save_to_file_n_panic(N, K, ALPHA, A + t*lda, lda, B, ldb, C + t*ldc, ldc);
+
+
             }
             else if (TA && !TB){
                 printf("2");
