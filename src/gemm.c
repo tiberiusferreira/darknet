@@ -25,9 +25,9 @@
 #endif
 
 void gemm_bin(int M, int N, int K, float ALPHA,
-        char  *A, int lda,
-        float *B, int ldb,
-        float *C, int ldc)
+              char  *A, int lda,
+              float *B, int ldb,
+              float *C, int ldc)
 {
     int i,j,k;
     for(i = 0; i < M; ++i){
@@ -82,10 +82,10 @@ void time_random_matrix(int TA, int TB, int m, int k, int n)
 
 
 void gemm(int TA, int TB, int M, int N, int K, float ALPHA,
-        float *A, int lda,
-        float *B, int ldb,
-        float BETA,
-        float *C, int ldc)
+          float *A, int lda,
+          float *B, int ldb,
+          float BETA,
+          float *C, int ldc)
 {
     gemm_cpu( TA,  TB,  M, N, K, ALPHA,A,lda, B, ldb,BETA,C,ldc);
 }
@@ -338,9 +338,9 @@ uint32_t reverse_32_bit(uint32_t a)
 {
     // unsigned int __rbit(unsigned int val) // for ARM    //__asm__("rbit %0, %1\n" : "=r"(output) : "r"(input));
     return (reverse_8_bit(a >> 24) << 0) |
-        (reverse_8_bit(a >> 16) << 8) |
-        (reverse_8_bit(a >> 8) << 16) |
-        (reverse_8_bit(a >> 0) << 24);
+           (reverse_8_bit(a >> 16) << 8) |
+           (reverse_8_bit(a >> 8) << 16) |
+           (reverse_8_bit(a >> 0) << 24);
 }
 
 #define swap(a0, a1, j, m) t = (a0 ^ (a1 >>j)) & m; a0 = a0 ^ t; a1 = a1 ^ (t << j);
@@ -390,10 +390,10 @@ void transpose_32x32_bits_reversed_diagonale(uint32_t *A, uint32_t *B, int m, in
 {
     unsigned A_tmp[32];
     int i;
-    #pragma unroll
+#pragma unroll
     for (i = 0; i < 32; ++i) A_tmp[i] = A[i * m];
     transpose32_optimized(A_tmp);
-    #pragma unroll
+#pragma unroll
     for (i = 0; i < 32; ++i) B[i*n] = A_tmp[i];
 }
 
@@ -411,9 +411,9 @@ void transpose_8x8_bits_my(unsigned char *A, unsigned char *B, int lda, int ldb)
 unsigned char reverse_byte_1(char a)
 {
     return ((a & 0x1) << 7) | ((a & 0x2) << 5) |
-        ((a & 0x4) << 3) | ((a & 0x8) << 1) |
-        ((a & 0x10) >> 1) | ((a & 0x20) >> 3) |
-        ((a & 0x40) >> 5) | ((a & 0x80) >> 7);
+           ((a & 0x4) << 3) | ((a & 0x8) << 1) |
+           ((a & 0x10) >> 1) | ((a & 0x20) >> 3) |
+           ((a & 0x40) >> 5) | ((a & 0x80) >> 7);
 }
 
 unsigned char reverse_byte(unsigned char a)
@@ -422,8 +422,8 @@ unsigned char reverse_byte(unsigned char a)
 }
 
 static unsigned char lookup[16] = {
-    0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe,
-    0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf, };
+        0x0, 0x8, 0x4, 0xc, 0x2, 0xa, 0x6, 0xe,
+        0x1, 0x9, 0x5, 0xd, 0x3, 0xb, 0x7, 0xf, };
 
 unsigned char reverse_byte_3(unsigned char n) {
     // Reverse the top and bottom nibble then swap them.
@@ -481,12 +481,12 @@ void transpose_bin(char *A, char *B, const int n, const int m,
 
 // transpose by 32-bit
 void transpose_bin(uint32_t *A, uint32_t *B, const int n, const int m,
-    const int lda, const int ldb, const int block_size)
+                   const int lda, const int ldb, const int block_size)
 {
     //printf("\n n = %d (n mod 32 = %d), m = %d (m mod 32 = %d) \n", n, n % 32, m, m % 32);
     //printf("\n lda = %d (lda mod 32 = %d), ldb = %d (ldb mod 32 = %d) \n", lda, lda % 32, ldb, ldb % 32);
     int i;
-    #pragma omp parallel for
+#pragma omp parallel for
     for (i = 0; i < n; i += 32) {
         int j;
         for (j = 0; j < m; j += 32) {
@@ -1975,9 +1975,9 @@ int is_fma_avx2() {
 }
 
 void gemm_nn(int M, int N, int K, float ALPHA,
-    float *A, int lda,
-    float *B, int ldb,
-    float *C, int ldc)
+             float *A, int lda,
+             float *B, int ldb,
+             float *C, int ldc)
 {
     int i, j, k;
     for (i = 0; i < M; ++i) {
@@ -1991,12 +1991,12 @@ void gemm_nn(int M, int N, int K, float ALPHA,
 }
 
 void gemm_nn_fast(int M, int N, int K, float ALPHA,
-    float *A, int lda,
-    float *B, int ldb,
-    float *C, int ldc)
+                  float *A, int lda,
+                  float *B, int ldb,
+                  float *C, int ldc)
 {
     int i, j, k;
-    #pragma omp parallel for
+#pragma omp parallel for
     for (i = 0; i < M; ++i) {
         for (k = 0; k < K; ++k) {
             PUT_IN_REGISTER float A_PART = ALPHA*A[i*lda + k];
@@ -2008,12 +2008,12 @@ void gemm_nn_fast(int M, int N, int K, float ALPHA,
 }
 
 void gemm_nn_bin_32bit_packed(int M, int N, int K, float ALPHA,
-    uint32_t *A, int lda,
-    uint32_t *B, int ldb,
-    float *C, int ldc, float *mean_arr)
+                              uint32_t *A, int lda,
+                              uint32_t *B, int ldb,
+                              float *C, int ldc, float *mean_arr)
 {
     int i;
-    #pragma omp parallel for
+#pragma omp parallel for
     for (i = 0; i < M; ++i) {   // l.n
         int j, s;
         float mean_val = mean_arr[i];
@@ -2039,7 +2039,7 @@ void gemm_nn_bin_32bit_packed(int M, int N, int K, float ALPHA,
 
 
 void convolution_2d(int w, int h, int ksize, int n, int c, int pad, int stride,
-    float *weights, float *input, float *output, float *mean)
+                    float *weights, float *input, float *output, float *mean)
 {
     const int out_h = (h + 2 * pad - ksize) / stride + 1;    // output_height=input_height for stride=1 and pad=1
     const int out_w = (w + 2 * pad - ksize) / stride + 1;    // output_width=input_width for stride=1 and pad=1
@@ -2047,7 +2047,7 @@ void convolution_2d(int w, int h, int ksize, int n, int c, int pad, int stride,
 
     int fil;
     // filter index
-    #pragma omp parallel for      // "omp parallel for" - automatic parallelization of loop by using OpenMP
+#pragma omp parallel for      // "omp parallel for" - automatic parallelization of loop by using OpenMP
     for (fil = 0; fil < n; ++fil) {
         int chan, y, x, f_y, f_x;
         // channel index
@@ -2088,7 +2088,7 @@ void convolution_2d(int w, int h, int ksize, int n, int c, int pad, int stride,
 
 static inline int popcnt_64(uint64_t val64) {
 #ifdef WIN32  // Windows
-#ifdef _WIN64 // Windows 64-bit
+    #ifdef _WIN64 // Windows 64-bit
     int tmp_count = __popcnt64(val64);
 #else         // Windows 32-bit
     int tmp_count = __popcnt(val64);
@@ -2106,13 +2106,13 @@ static inline int popcnt_64(uint64_t val64) {
 }
 
 void gemm_nn_custom_bin_mean_transposed(int M, int N, int K, float ALPHA_UNUSED,
-    unsigned char *A, int lda,
-    unsigned char *B, int ldb,
-    float *C, int ldc, float *mean_arr)
+                                        unsigned char *A, int lda,
+                                        unsigned char *B, int ldb,
+                                        float *C, int ldc, float *mean_arr)
 {
     int i;
 
-    #pragma omp parallel for
+#pragma omp parallel for
     for (i = 0; i < M; ++i) {   // l.n - filters [16 - 55 - 1024]
         int j, k;
         float mean_val = mean_arr[i];
@@ -2139,8 +2139,8 @@ void gemm_nn_custom_bin_mean_transposed(int M, int N, int K, float ALPHA_UNUSED,
 }
 
 void im2col_cpu_custom_transpose(float* data_im,
-    int channels, int height, int width,
-    int ksize, int stride, int pad, float* data_col, int ldb_align)
+                                 int channels, int height, int width,
+                                 int ksize, int stride, int pad, float* data_col, int ldb_align)
 {
     printf("\n im2col_cpu_custom_transpose() isn't implemented without AVX \n");
 }
@@ -2148,8 +2148,8 @@ void im2col_cpu_custom_transpose(float* data_im,
 //From Berkeley Vision's Caffe!
 //https://github.com/BVLC/caffe/blob/master/LICENSE
 void im2col_cpu_custom(float* data_im,
-    int channels, int height, int width,
-    int ksize, int stride, int pad, float* data_col)
+                       int channels, int height, int width,
+                       int ksize, int stride, int pad, float* data_col)
 {
     im2col_cpu(data_im, channels, height, width, ksize, stride, pad, data_col);
     return;
@@ -2162,7 +2162,7 @@ void im2col_cpu_custom(float* data_im,
     // optimized version
     if (height_col == height && width_col == width && stride == 1 && pad == 1)
     {
-        #pragma omp parallel for
+#pragma omp parallel for
         for (c = 0; c < channels_col; ++c) {
             int h, w;
             int w_offset = c % ksize;
@@ -2184,7 +2184,7 @@ void im2col_cpu_custom(float* data_im,
 
                     data_col[col_index] = data_im[im_col + width*(im_row + height*c_im)];
                 }
-    }
+            }
 
             {
                 w = 0;
@@ -2193,7 +2193,7 @@ void im2col_cpu_custom(float* data_im,
                     int im_col = w_offset + w;
                     int col_index = (c * height_col + h) * width_col + w;
                     data_col[col_index] = im2col_get_pixel(data_im, height, width, channels,
-                        im_row, im_col, c_im, pad);
+                                                           im_row, im_col, c_im, pad);
                 }
             }
 
@@ -2204,7 +2204,7 @@ void im2col_cpu_custom(float* data_im,
                     int im_col = w_offset + w;
                     int col_index = (c * height_col + h) * width_col + w;
                     data_col[col_index] = im2col_get_pixel(data_im, height, width, channels,
-                        im_row, im_col, c_im, pad);
+                                                           im_row, im_col, c_im, pad);
                 }
             }
 
@@ -2215,7 +2215,7 @@ void im2col_cpu_custom(float* data_im,
                     int im_col = w_offset + w;
                     int col_index = (c * height_col + h) * width_col + w;
                     data_col[col_index] = im2col_get_pixel(data_im, height, width, channels,
-                        im_row, im_col, c_im, pad);
+                                                           im_row, im_col, c_im, pad);
                 }
             }
 
@@ -2226,7 +2226,7 @@ void im2col_cpu_custom(float* data_im,
                     int im_col = w_offset + w;
                     int col_index = (c * height_col + h) * width_col + w;
                     data_col[col_index] = im2col_get_pixel(data_im, height, width, channels,
-                        im_row, im_col, c_im, pad);
+                                                           im_row, im_col, c_im, pad);
                 }
             }
         }
@@ -2242,8 +2242,8 @@ void im2col_cpu_custom(float* data_im,
 //From Berkeley Vision's Caffe!
 //https://github.com/BVLC/caffe/blob/master/LICENSE
 void im2col_cpu_custom_bin(float* data_im,
-    int channels, int height, int width,
-    int ksize, int stride, int pad, float* data_col, int bit_align)
+                           int channels, int height, int width,
+                           int ksize, int stride, int pad, float* data_col, int bit_align)
 {
     int c;
     const int height_col = (height + 2 * pad - ksize) / stride + 1;
@@ -2255,7 +2255,7 @@ void im2col_cpu_custom_bin(float* data_im,
     {
         int new_ldb = bit_align;
 
-        #pragma omp parallel for
+#pragma omp parallel for
         for (c = 0; c < channels_col; ++c) {
             int h, w;
             int w_offset = c % ksize;
@@ -2413,10 +2413,10 @@ static inline void transpose_scalar_block(float *A, float *B, const int lda, con
 }
 
 void transpose_block_SSE4x4(float *A, float *B, const int n, const int m,
-    const int lda, const int ldb, const int block_size)
+                            const int lda, const int ldb, const int block_size)
 {
     int i;
-    #pragma omp parallel for
+#pragma omp parallel for
     for (i = 0; i < n; i += block_size) {
         int j, i2, j2;
         for (j = 0; j < m; j += block_size) {
@@ -2426,20 +2426,20 @@ void transpose_block_SSE4x4(float *A, float *B, const int n, const int m,
                 for (j2 = j; j2 < max_j2; ++j2) {
                     B[j2*ldb + i2] = A[i2*lda + j2];
                 }
-                }
             }
         }
+    }
 }
 
 void forward_maxpool_layer_avx(float *src, float *dst, int *indexes, int size, int w, int h, int out_w, int out_h, int c,
-    int pad, int stride, int batch)
+                               int pad, int stride, int batch)
 {
     int b, k;
     const int w_offset = -pad / 2;
     const int h_offset = -pad / 2;
 
     for (b = 0; b < batch; ++b) {
-        #pragma omp parallel for
+#pragma omp parallel for
         for (k = 0; k < c; ++k) {
             int i, j, m, n;
             for (i = 0; i < out_h; ++i) {
@@ -2453,7 +2453,7 @@ void forward_maxpool_layer_avx(float *src, float *dst, int *indexes, int size, i
                             int cur_w = w_offset + j*stride + m;
                             int index = cur_w + w*(cur_h + h*(k + b*c));
                             int valid = (cur_h >= 0 && cur_h < h &&
-                                cur_w >= 0 && cur_w < w);
+                                         cur_w >= 0 && cur_w < w);
                             float val = (valid != 0) ? src[index] : -FLT_MAX;
                             max_i = (val > max) ? index : max_i;
                             max = (val > max) ? val : max;
@@ -2508,12 +2508,12 @@ void transpose_uint32(uint32_t *src, uint32_t *dst, int src_h, int src_w, int sr
 }
 
 void gemm_nn_bin_transposed_32bit_packed(int M, int N, int K, float ALPHA,
-    uint32_t *A, int lda,
-    uint32_t *B, int ldb,
-    float *C, int ldc, float *mean_arr)
+                                         uint32_t *A, int lda,
+                                         uint32_t *B, int ldb,
+                                         float *C, int ldc, float *mean_arr)
 {
     int i;
-    #pragma omp parallel for
+#pragma omp parallel for
     for (i = 0; i < M; ++i) {   // l.n
         int j, s;
         float mean_val = mean_arr[i];
@@ -2535,11 +2535,11 @@ void gemm_nn_bin_transposed_32bit_packed(int M, int N, int K, float ALPHA,
 }
 
 void convolution_repacked(uint32_t *packed_input, uint32_t *packed_weights, float *output,
-    int w, int h, int c, int n, int size, int pad, int new_lda, float *mean_arr)
+                          int w, int h, int c, int n, int size, int pad, int new_lda, float *mean_arr)
 {
     int fil;
     // filter index
-    #pragma omp parallel for
+#pragma omp parallel for
     for (fil = 0; fil < n; ++fil) {
         float mean_val = mean_arr[fil];
         int chan, y, x, f_y, f_x;   // c_pack
@@ -2601,9 +2601,9 @@ void convolution_repacked(uint32_t *packed_input, uint32_t *packed_weights, floa
 }
 
 void gemm_nt(int M, int N, int K, float ALPHA,
-        float *A, int lda,
-        float *B, int ldb,
-        float *C, int ldc)
+             float *A, int lda,
+             float *B, int ldb,
+             float *C, int ldc)
 {
     int i,j,k;
     for(i = 0; i < M; ++i){
@@ -2618,9 +2618,9 @@ void gemm_nt(int M, int N, int K, float ALPHA,
 }
 
 void gemm_tn(int M, int N, int K, float ALPHA,
-        float *A, int lda,
-        float *B, int ldb,
-        float *C, int ldc)
+             float *A, int lda,
+             float *B, int ldb,
+             float *C, int ldc)
 {
     int i,j,k;
     for(i = 0; i < M; ++i){
@@ -2634,9 +2634,9 @@ void gemm_tn(int M, int N, int K, float ALPHA,
 }
 
 void gemm_tt(int M, int N, int K, float ALPHA,
-        float *A, int lda,
-        float *B, int ldb,
-        float *C, int ldc)
+             float *A, int lda,
+             float *B, int ldb,
+             float *C, int ldc)
 {
     int i,j,k;
     for(i = 0; i < M; ++i){
@@ -2653,33 +2653,40 @@ void gemm_tt(int M, int N, int K, float ALPHA,
 
 
 extern void gemm_nn_rust_safe(int N, int K, float ALPHA,
-             float *A, int lda,
-             float *B, int ldb,
-             float *C, int ldc);
+                              float *A, int lda,
+                              float *B, int ldb,
+                              float *C, int ldc);
 
 
 extern void gemm_nn_rust_unsafe(int N, int K, float ALPHA,
-                              float *A, int lda,
-                              float *B, int ldb,
-                              float *C, int ldc);
+                                float *A, int lda,
+                                float *B, int ldb,
+                                float *C, int ldc);
 
 
 extern void gemm_nn_rust_simd(int N, int K, float ALPHA,
-                                  float *A, int lda,
-                                  float *B, int ldb,
-                                  float *C, int ldc);
-
-extern void gemm_nn_rust_safe_save_to_file_n_panic(int N, int K, float ALPHA,
                               float *A, int lda,
                               float *B, int ldb,
                               float *C, int ldc);
 
+extern void gemm_nn_rust_safe_save_to_file_n_panic(int N, int K, float ALPHA,
+                                                   float *A, int lda,
+                                                   float *B, int ldb,
+                                                   float *C, int ldc);
+
+
+extern void gemm_nn_rust_unsafe_reddit_c(int M, int N, int K, float ALPHA,
+                                         float *A, int lda,
+                                         float *B, int ldb,
+                                         float *C, int ldc);
+
+
 
 void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA,
-        float *A, int lda,
-        float *B, int ldb,
-        float BETA,
-        float *C, int ldc)
+              float *A, int lda,
+              float *B, int ldb,
+              float BETA,
+              float *C, int ldc)
 {
 
     clock_t t;
@@ -2701,18 +2708,23 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA,
 
     is_avx();   // initialize static variable
     if (is_fma_avx2() && !TA && !TB) {
-        gemm_nn_fast(M, N, K, ALPHA, A, lda, B, ldb, C, ldc);
+//        gemm_nn_fast(M, N, K, ALPHA, A, lda, B, ldb, C, ldc);
+//        printf("M = %d", M);
+        gemm_nn_rust_unsafe_reddit_c(M, N, K, ALPHA, A, lda, B, ldb, C, ldc);
     }
     else {
         int t;
-        #pragma omp parallel for
+#pragma omp parallel for
         for (t = 0; t < M; ++t)  {
             if (!TA && !TB){
 //                printf("1");
 //                gemm_nn(1, N, K, ALPHA,  A + t*lda, lda, B, ldb, C + t*ldc, ldc);
 //                gemm_nn_rust_simd(N, K, ALPHA, A + t*lda, lda, B, ldb, C + t*ldc, ldc);
 //                gemm_nn_rust_safe(N, K, ALPHA, A + t*lda, lda, B, ldb, C + t*ldc, ldc);
-                gemm_nn_rust_safe_save_to_file_n_panic(N, K, ALPHA, A + t*lda, lda, B, ldb, C + t*ldc, ldc);
+//                gemm_nn_rust_safe_save_to_file_n_panic(N, K, ALPHA, A + t*lda, lda, B, ldb, C + t*ldc, ldc);
+//                printf("some\n");
+//                gemm_nn_rust_unsafe_reddit_c(N, K, ALPHA, A + t*lda, lda, B, ldb, C + t*ldc, ldc);
+
 
 
             }
