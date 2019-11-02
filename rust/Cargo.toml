@@ -7,7 +7,7 @@ authors = ["Tiberio D A R Ferreira <tiberiusferreira@gmail.com>"]
 edition = "2018"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 [lib]
-crate-type = ["cdylib"]
+crate-type = ["staticlib"]
 
 [dependencies]
 libc = "0.2.65"
@@ -17,3 +17,8 @@ serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
 bincode = "1.2.0"
 rayon = "1.2.0"
+ndarray = { version = "0.13.0", features = ["blas"] }
+blas-src = { version = "0.2.0", default-features = false, features = ["openblas"] }
+openblas-src = { version = "0.6.0", default-features = false, features = ["cblas", "system"] }
+[profile.release]
+lto = true

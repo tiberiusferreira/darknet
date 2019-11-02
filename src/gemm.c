@@ -24,6 +24,14 @@
 #define PUT_IN_REGISTER register
 #endif
 
+
+#include <x86intrin.h>
+#include <ammintrin.h>
+#include <immintrin.h>
+#include <smmintrin.h>
+#include <cpuid.h>
+
+
 void gemm_bin(int M, int N, int K, float ALPHA,
               char  *A, int lda,
               float *B, int ldb,
@@ -512,7 +520,7 @@ static inline int popcnt_32(uint32_t val32) {
 //----------------------------
 
 
-#if (defined(__AVX__) && defined(__x86_64__)) || defined(_WIN64)
+#if (FALSE && defined(__AVX__) && defined(__x86_64__)) || defined(_WIN64)
 
 #ifdef _WIN64
 #include <intrin.h>
@@ -2007,6 +2015,144 @@ void gemm_nn_fast(int M, int N, int K, float ALPHA,
     }
 }
 
+
+
+
+
+//void gemm_nn_fast_avx(int M, int N, int K, float ALPHA,
+//                  float *A, int lda,
+//                  float *B, int ldb,
+//                  float *C, int ldc)
+//{
+//    int i;
+//
+//#pragma omp parallel for
+//    for (i = 0; i < (M / TILE_M)*TILE_M; i += TILE_M)
+//    {
+//        int j, k;
+//        int i_d, k_d;
+//
+//        for (k = 0; k < (K / TILE_K)*TILE_K; k += TILE_K)
+//        {
+//            for (j = 0; j < (N / TILE_N)*TILE_N; j += TILE_N)
+//            {
+//                // L1 - 6 bits tag [11:6] - cache size 32 KB, conflict for each 4 KB
+//                // L2 - 9 bits tag [14:6] - cache size 256 KB, conflict for each 32 KB
+//                // L3 - 13 bits tag [18:6] - cache size 8 MB, conflict for each 512 KB
+//
+//                __m256 result256;
+//                __m256 a256_0, b256_0;    // AVX
+//                __m256 a256_1, b256_1;    // AVX
+//                __m256 a256_2;// , b256_2;    // AVX
+//                __m256 a256_3;// , b256_3;    // AVX
+//                __m256 c256_0, c256_1, c256_2, c256_3;
+//                __m256 c256_4, c256_5, c256_6, c256_7;
+//
+//                c256_0 = _mm256_loadu_ps(&C[(0 + i)*ldc + (0 + j)]);
+//                c256_1 = _mm256_loadu_ps(&C[(1 + i)*ldc + (0 + j)]);
+//                c256_2 = _mm256_loadu_ps(&C[(0 + i)*ldc + (8 + j)]);
+//                c256_3 = _mm256_loadu_ps(&C[(1 + i)*ldc + (8 + j)]);
+//
+//                c256_4 = _mm256_loadu_ps(&C[(2 + i)*ldc + (0 + j)]);
+//                c256_5 = _mm256_loadu_ps(&C[(3 + i)*ldc + (0 + j)]);
+//                c256_6 = _mm256_loadu_ps(&C[(2 + i)*ldc + (8 + j)]);
+//                c256_7 = _mm256_loadu_ps(&C[(3 + i)*ldc + (8 + j)]);
+//
+//
+//                for (k_d = 0; k_d < (TILE_K); ++k_d)
+//                {
+//                    a256_0 = _mm256_set1_ps(ALPHA*A[(0 + i)*lda + (k_d + k)]);
+//                    a256_1 = _mm256_set1_ps(ALPHA*A[(1 + i)*lda + (k_d + k)]);
+//
+//                    a256_2 = _mm256_set1_ps(ALPHA*A[(2 + i)*lda + (k_d + k)]);
+//                    a256_3 = _mm256_set1_ps(ALPHA*A[(3 + i)*lda + (k_d + k)]);
+//
+//
+//                    b256_0 = _mm256_loadu_ps(&B[(k_d + k)*ldb + (0 + j)]);
+//                    b256_1 = _mm256_loadu_ps(&B[(k_d + k)*ldb + (8 + j)]);
+//
+//                    // FMA - Intel Haswell (2013), AMD Piledriver (2012)
+//                    //c256_0 = _mm256_fmadd_ps(a256_0, b256_0, c256_0);
+//                    //c256_1 = _mm256_fmadd_ps(a256_1, b256_0, c256_1);
+//                    //c256_2 = _mm256_fmadd_ps(a256_0, b256_1, c256_2);
+//                    //c256_3 = _mm256_fmadd_ps(a256_1, b256_1, c256_3);
+//
+//                    //c256_4 = _mm256_fmadd_ps(a256_2, b256_0, c256_4);
+//                    //c256_5 = _mm256_fmadd_ps(a256_3, b256_0, c256_5);
+//                    //c256_6 = _mm256_fmadd_ps(a256_2, b256_1, c256_6);
+//                    //c256_7 = _mm256_fmadd_ps(a256_3, b256_1, c256_7);
+//
+//                    result256 = _mm256_mul_ps(a256_0, b256_0);
+//                    c256_0 = _mm256_add_ps(result256, c256_0);
+//
+//                    result256 = _mm256_mul_ps(a256_1, b256_0);
+//                    c256_1 = _mm256_add_ps(result256, c256_1);
+//
+//                    result256 = _mm256_mul_ps(a256_0, b256_1);
+//                    c256_2 = _mm256_add_ps(result256, c256_2);
+//
+//                    result256 = _mm256_mul_ps(a256_1, b256_1);
+//                    c256_3 = _mm256_add_ps(result256, c256_3);
+//
+//
+//                    result256 = _mm256_mul_ps(a256_2, b256_0);
+//                    c256_4 = _mm256_add_ps(result256, c256_4);
+//
+//                    result256 = _mm256_mul_ps(a256_3, b256_0);
+//                    c256_5 = _mm256_add_ps(result256, c256_5);
+//
+//                    result256 = _mm256_mul_ps(a256_2, b256_1);
+//                    c256_6 = _mm256_add_ps(result256, c256_6);
+//
+//                    result256 = _mm256_mul_ps(a256_3, b256_1);
+//                    c256_7 = _mm256_add_ps(result256, c256_7);
+//                }
+//                _mm256_storeu_ps(&C[(0 + i)*ldc + (0 + j)], c256_0);
+//                _mm256_storeu_ps(&C[(1 + i)*ldc + (0 + j)], c256_1);
+//                _mm256_storeu_ps(&C[(0 + i)*ldc + (8 + j)], c256_2);
+//                _mm256_storeu_ps(&C[(1 + i)*ldc + (8 + j)], c256_3);
+//
+//                _mm256_storeu_ps(&C[(2 + i)*ldc + (0 + j)], c256_4);
+//                _mm256_storeu_ps(&C[(3 + i)*ldc + (0 + j)], c256_5);
+//                _mm256_storeu_ps(&C[(2 + i)*ldc + (8 + j)], c256_6);
+//                _mm256_storeu_ps(&C[(3 + i)*ldc + (8 + j)], c256_7);
+//            }
+//
+//            for (j = (N / TILE_N)*TILE_N; j < N; ++j) {
+//                for (i_d = i; i_d < (i + TILE_M); ++i_d)
+//                {
+//                    for (k_d = k; k_d < (k + TILE_K); ++k_d)
+//                    {
+//                        PUT_IN_REGISTER float A_PART = ALPHA*A[i_d*lda + k_d];
+//                        C[i_d*ldc + j] += A_PART*B[k_d*ldb + j];
+//                    }
+//                }
+//            }
+//        }
+//
+//        for (k = (K / TILE_K)*TILE_K; k < K; ++k)
+//        {
+//            for (i_d = i; i_d < (i + TILE_M); ++i_d)
+//            {
+//                PUT_IN_REGISTER float A_PART = ALPHA*A[i_d*lda + k];
+//                for (j = 0; j < N; ++j) {
+//                    C[i_d*ldc + j] += A_PART*B[k*ldb + j];
+//                }
+//            }
+//        }
+//    }
+//
+//    for (i = (M / TILE_M)*TILE_M; i < M; ++i) {
+//        int j, k;
+//        for (k = 0; k < K; ++k) {
+//            PUT_IN_REGISTER float A_PART = ALPHA*A[i*lda + k];
+//            for (j = 0; j < N; ++j) {
+//                C[i*ldc + j] += A_PART*B[k*ldb + j];
+//            }
+//        }
+//    }
+//}
+
 void gemm_nn_bin_32bit_packed(int M, int N, int K, float ALPHA,
                               uint32_t *A, int lda,
                               uint32_t *B, int ldb,
@@ -2669,7 +2815,7 @@ extern void gemm_nn_rust_simd(int N, int K, float ALPHA,
                               float *B, int ldb,
                               float *C, int ldc);
 
-extern void gemm_nn_rust_safe_save_to_file_n_panic(int N, int K, float ALPHA,
+extern void gemm_nn_rust_safe_save_to_file_n_panic(int M, int N, int K, float ALPHA,
                                                    float *A, int lda,
                                                    float *B, int ldb,
                                                    float *C, int ldc);
@@ -2680,6 +2826,11 @@ extern void gemm_nn_rust_unsafe_reddit_c(int M, int N, int K, float ALPHA,
                                          float *B, int ldb,
                                          float *C, int ldc);
 
+
+extern void gemm_nn_fast_raw_c(int M, int N, int K, float ALPHA,
+                                         float *A, int lda,
+                                         float *B, int ldb,
+                                         float *C, int ldc);
 
 
 void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA,
@@ -2707,9 +2858,13 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA,
     }
 
     is_avx();   // initialize static variable
-    if (is_fma_avx2() && !TA && !TB) {
+    if (!TA && !TB) {
 //        gemm_nn_fast(M, N, K, ALPHA, A, lda, B, ldb, C, ldc);
+//        printf("fast\n");
+//        gemm_nn_fast_avx(M, N, K, ALPHA, A, lda, B, ldb, C, ldc);
+//          gemm_nn_rust_safe_save_to_file_n_panic(M, N, K, ALPHA, A, lda, B, ldb, C, ldc);
 //        printf("M = %d", M);
+//        gemm_nn_fast_raw_c(M, N, K, ALPHA, A, lda, B, ldb, C, ldc);
         gemm_nn_rust_unsafe_reddit_c(M, N, K, ALPHA, A, lda, B, ldb, C, ldc);
     }
     else {
@@ -2723,7 +2878,8 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA,
 //                gemm_nn_rust_safe(N, K, ALPHA, A + t*lda, lda, B, ldb, C + t*ldc, ldc);
 //                gemm_nn_rust_safe_save_to_file_n_panic(N, K, ALPHA, A + t*lda, lda, B, ldb, C + t*ldc, ldc);
 //                printf("some\n");
-//                gemm_nn_rust_unsafe_reddit_c(N, K, ALPHA, A + t*lda, lda, B, ldb, C + t*ldc, ldc);
+//                gemm_nn_rust_unsafe_reddit_c(M, N, K, ALPHA, A, lda, B, ldb, C, ldc);
+                gemm_nn_rust_unsafe_reddit_c(1, N, K, ALPHA, A + t*lda, lda, B, ldb, C + t*ldc, ldc);
 
 
 

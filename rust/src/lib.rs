@@ -12,6 +12,7 @@ use std::io::Write;
 
 #[derive(Serialize, Deserialize, Debug)]
 struct Data {
+    m: usize,
     n: usize,
     k: usize,
     alpha: f32,
@@ -20,7 +21,6 @@ struct Data {
     b: Vec<f32>,
     ldb: usize,
     c: Vec<f32>,
-    c_new: Vec<f32>,
     ldc: usize,
 }
 
@@ -28,39 +28,73 @@ struct Data {
 #[cfg(test)]
 mod tests {
     use super::*;
-    #[test]
-    fn bench() {
-        println!("Start");
+    use ndarray::Array;
+//    #[test]
+//    fn bench() {
+//        println!("Start");
+//
+//        let file_path = "./test.bin";
+//
+//        let file = File::open(file_path).unwrap();
+//        let a: Data = bincode::deserialize_from(&file).unwrap();
+//
+//        println!("Loaded");
+//        let nb_iter = 1000;
+//
+//
+//
+//        let start = Instant::now();
+//        for _i in 0..nb_iter{
+//            gemm_nn_rust_unsafe(a.n, a.k, a.alpha, a.a.as_ptr(), a.lda, a.b.as_ptr(),
+//                                a.ldb, a.c.as_ptr(), a.ldc);
+//        }
+//        let non_simd = start.elapsed().as_millis();
+//        println!("{}    {}", a.c[100], a.c_new[100]);
+////        assert_eq!(a.c[100], a.c_new[100]);
+//
+//        let start = Instant::now();
+//        for _i in 0..nb_iter {
+//            unsafe{
+//                gemm_nn_rust_unsafe_reddit(a.a.as_ptr(), a.lda, 1,a.k, a.b.as_ptr(), a.ldb, a.k,
+//                                           a.n, a.c.as_ptr(), a.ldc, 1, a.n, a.alpha);
+////                gemm_nn_rust_simd(a.n, a.k, a.alpha, a.a.as_ptr(), a.lda, a.b.as_ptr(),
+////                                    a.ldb, a.c.as_ptr(), a.ldc);
+//            }
+//        }
+//        let reddit = start.elapsed().as_millis();
+//
+//        println!("Time for {} iterations. Non SIMD: {}ms; Reddit: {}ms", nb_iter, non_simd, reddit);
+//    }
 
+    #[test]
+    fn bench_nd() {
+        println!("Start");
+        use ndarray::arr2;
         let file_path = "./test.bin";
 
         let file = File::open(file_path).unwrap();
         let a: Data = bincode::deserialize_from(&file).unwrap();
 
-        println!("Loaded");
-        let nb_iter = 1000;
+        println!("m = {:?} lena = {:?} lda = {:?} k = {:?} alpha = {:?}", a.m, a.a.len(), a.lda, a.k, a.alpha);
+        println!("lenb = {:?} ldb = {:?} n = {:?}", a.b.len(), a.ldb, a.n);
+        println!("lenc = {:?} ldc = {:?} ", a.c.len(), a.ldc);
 
+        let a_t = Array::from_shape_vec((a.m, a.k), a.a).unwrap();
+        let b_t = Array::from_shape_vec((a.k, a.n), a.b).unwrap();
 
+        let c = a_t.dot(&b_t);
+        println!("{:?}", c.shape());
 
-        let start = Instant::now();
-        for _i in 0..nb_iter{
-            gemm_nn_rust_unsafe(a.n, a.k, a.alpha, a.a.as_ptr(), a.lda, a.b.as_ptr(),
-                                a.ldb, a.c.as_ptr(), a.ldc);
+        println!("{:?}", c.get((0,1)));
+        let file = File::open(file_path).unwrap();
+        let a: Data = bincode::deserialize_from(&file).unwrap();
+        unsafe{
+            gemm_nn_rust_unsafe_reddit(a.a.as_ptr(), a.lda, 1,a.k, a.b.as_ptr(), a.ldb, a.k,
+                                       a.n, a.c.as_ptr(), a.ldc, 1, a.n, a.alpha);
         }
-        let non_simd = start.elapsed().as_millis();
-        println!("{}    {}", a.c[100], a.c_new[100]);
-//        assert_eq!(a.c[100], a.c_new[100]);
+        println!("{:?}", a.c[1]);
 
-        let start = Instant::now();
-        for _i in 0..nb_iter {
-            unsafe{
-                gemm_nn_rust_unsafe_reddit(a.a.as_ptr(), a.lda, 1,a.k, a.b.as_ptr(), a.ldb, a.k,
-                                           a.n, a.c.as_ptr(), a.ldc, 1, a.n, a.alpha);
-            }
-        }
-        let reddit = start.elapsed().as_millis();
 
-        println!("Time for {} iterations. Non SIMD: {}ms; Reddit: {}ms", nb_iter, non_simd, reddit);
     }
 }
 #[no_mangle]
@@ -129,7 +163,7 @@ pub extern "C" fn gemm_nn_rust_simd(n: usize, k: usize, alpha: f32,
         let i = 0;
         for k_index in 0..k {
             let a_part: f32 = alpha * *a_n.get_unchecked(i * (lda) + k_index);
-            let a_part_simd = f32x4::splat(a_part);
+//            let a_part_simd = f32x4::splat(a_part);
             let mut j = 0;
             let c_ind = i * (ldc);
             let b_ind = k_index * (ldb);
@@ -138,7 +172,7 @@ pub extern "C" fn gemm_nn_rust_simd(n: usize, k: usize, alpha: f32,
                 let c_var = f32x4::from_slice_unaligned_unchecked(&c_n[c_ind_inner ..]);
                 let b_var = f32x4::from_slice_unaligned_unchecked(&b_n[(b_ind + j) ..]);
 
-                let res = c_var + a_part_simd * b_var;
+                let res = c_var + a_part * b_var;
                 res.write_to_slice_unaligned_unchecked(&mut c_n[c_ind_inner ..]);
                 j = j + chunks;
             }
@@ -201,36 +235,37 @@ void gemm_nn(int M, int N, int K, float ALPHA,
 
 
 #[no_mangle]
-pub extern "C" fn gemm_nn_rust_safe_save_to_file_n_panic(n: usize, k: usize, alpha: f32,
+pub extern "C" fn gemm_nn_rust_safe_save_to_file_n_panic(m: usize, n: usize, k: usize, alpha: f32,
                                                          a: *const f32, lda: usize,
                                                          b: *const f32, ldb: usize,
                                                          c: *const f32, ldc: usize){
 
-    let size_a = lda + k;
+    let size_a = m*k;
     let a_n;
     unsafe {
         a_n = std::slice::from_raw_parts(a as *const f32, size_a);
     }
 
-    let size_b = k*ldb + n;
+    let size_b = k*n;
     let b_n;
     unsafe {
         b_n = std::slice::from_raw_parts(b as *const f32, size_b);
     }
 
-    let size_c = ldc + n;
+    let size_c = m*n;
     let c_n;
     unsafe {
         c_n = std::slice::from_raw_parts_mut(c as *mut f32, size_c);
     }
 
-    let old_c = c_n.to_vec().clone();
+//    let old_c = c_n.to_vec().clone();
 
-    gemm_nn_rust_safe(n, k, alpha,a, lda,b, ldb,c, ldc);
+//    gemm_nn_rust_safe(n, k, alpha,a, lda,b, ldb,c, ldc);
 
 
 
     let new = Data{
+        m,
         n,
         k,
         alpha,
@@ -238,8 +273,7 @@ pub extern "C" fn gemm_nn_rust_safe_save_to_file_n_panic(n: usize, k: usize, alp
         lda,
         b: b_n.to_vec(),
         ldb,
-        c: old_c,
-        c_new: c_n.to_vec(),
+        c: c_n.to_vec(),
         ldc
     };
 
@@ -299,10 +333,40 @@ pub extern "C" fn gemm_nn_rust_unsafe_reddit_c(m: usize, n: usize, k: usize, alp
                                                a: *const f32, lda: usize,
                                                b: *const f32, ldb: usize,
                                                c: *const f32, ldc: usize){
-    unsafe{
-        gemm_nn_rust_unsafe_reddit(a, lda, m,k, b, ldb, k,
-                                   n, c, ldc, m, n, alpha);
+    let a_n;
+    let b_n;
+    let mut c_n;
+    unsafe {
+        let size_a = m * k;
+        a_n = Vec::from_raw_parts(a as *mut f32, size_a, size_a);
+
+
+        let size_b = k * n;
+        b_n = Vec::from_raw_parts(b as *mut f32, size_b, size_b);
+
+
+        let size_c = m * n;
+        c_n = Vec::from_raw_parts(c as *mut f32, size_c, size_c);
     }
+    let a_t = Array::from_shape_vec((m, k), a_n).unwrap();
+    let b_t = Array::from_shape_vec((k, n), b_n).unwrap();
+
+
+    let c = a_t.dot(&b_t);
+    for (index, value) in c.iter().enumerate(){
+        c_n[index] = *value;
+    }
+
+
+
+    println!("{:?}",c.shape());
+    std::mem::forget(a_t);
+    std::mem::forget(b_t);
+    std::mem::forget(c_n);
+//    unsafe{
+//        gemm_nn_rust_unsafe_reddit(a, lda, m,k, b, ldb, k,
+//                                   n, c, ldc, m, n, alpha);
+//    }
 }
 
 #[no_mangle]
@@ -395,15 +459,24 @@ impl<'a> MatrixMut<'a> {
 // c stride is n
 // ldc stride is n
 use rayon::prelude::*;
+use ndarray::Array;
 
 pub fn gemm_nn_rust(alpha: f32, a_n: &Matrix<'_>, b_n: &Matrix<'_>, c_n: &mut MatrixMut<'_>) {
+//    println!("alpha: {}", alpha);
     for (a_row, c_row) in a_n.rows().into_iter().zip(c_n.rows()) {
         for (&a_val, b_row) in a_row.iter().zip(b_n.rows()) {
             let a_part = alpha * a_val;
-
-            for (c_cell, &b_val) in c_row.iter_mut().zip(b_row.iter()) {
-                *c_cell += a_part * b_val;
+            unsafe{
+                for (c_cell, b_val) in c_row.chunks_mut(4).zip(b_row.chunks(4)) {
+                    let res = a_part * f32x4::from_slice_unaligned_unchecked(&b_val[..]) + f32x4::from_slice_unaligned_unchecked(&c_cell[..]);
+                    res.write_to_slice_unaligned_unchecked(c_cell);
+                }
             }
+
+//            for (c_cell, &b_val) in c_row.iter_mut().zip(b_row.iter()){
+//                let c_var = f32x4::from_slice_unaligned_unchecked(&c_cell[..]);
+//                *c_cell += a_part * b_val;
+//            }
         }
     }
 }
