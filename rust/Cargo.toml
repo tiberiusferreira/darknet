@@ -19,7 +19,7 @@ bincode = "1.2.0"
 rayon = "1.2.0"
 
 cblas = "*"
-blas-src = {version = "0.4.0", features=['openblas-src']}
+openblas-src = {version = "0.7.0", features=['system']}
 #blasoxide = "0.3.2"
 matrixmultiply = "0.2.3"
 [profile.release]
