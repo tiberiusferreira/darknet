@@ -356,11 +356,19 @@ pub extern "C" fn gemm_nn_rust_unsafe_reddit_c(m: usize, n: usize, k: usize, alp
 //        c_n[index] = *value;
 //    }
 
+    println!("lda = {:?}", lda);
+    println!("ldb = {:?}", ldb);
+    println!("ldc = {:?}", ldc);
+    println!("m = {:?}", m);
+    println!("n = {:?}", n);
+    println!("k = {:?}", k);
+    println!("alpha = {:?}", alpha);
     unsafe {
-//        blas::sgemm(b'T', b'T', m as i32, n as i32  , k as i32,
-//         alpha, a_n, m as i32, b_n, k as i32 , 1.0, c_n, m as i32);
-        matrixmultiply::sgemm(m, k, n, alpha, a, lda as isize, 1 as isize, b,
-                              ldb as isize, 1 as isize, 1.0, c, ldc as isize, 1 as isize);
+
+        cblas::sgemm(Layout::RowMajor, Transpose::None, Transpose::None, m as i32, n as i32  , k as i32,
+         alpha, a_n, lda as i32, b_n, ldb as i32 , 1.0, c_n, ldc as i32);
+//        matrixmultiply::sgemm(m, k, n, alpha, a, lda as isize, 1 as isize, b,
+//                              ldb as isize, 1 as isize, 1.0, c, ldc as isize, 1 as isize);
     }
 
     println!("{:?}", c_n[0]);
@@ -463,6 +471,7 @@ impl<'a> MatrixMut<'a> {
 // c stride is n
 // ldc stride is n
 use rayon::prelude::*;
+use cblas::{Layout, Transpose};
 
 pub fn gemm_nn_rust(alpha: f32, a_n: &Matrix<'_>, b_n: &Matrix<'_>, c_n: &mut MatrixMut<'_>) {
 //    println!("alpha: {}", alpha);
