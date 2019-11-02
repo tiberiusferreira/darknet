@@ -25,12 +25,6 @@
 #endif
 
 
-#include <x86intrin.h>
-#include <ammintrin.h>
-#include <immintrin.h>
-#include <smmintrin.h>
-#include <cpuid.h>
-
 
 void gemm_bin(int M, int N, int K, float ALPHA,
               char  *A, int lda,
