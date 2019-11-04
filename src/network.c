@@ -255,7 +255,7 @@ void forward_network(network net, network_state state)
     int i;
 
     for(i = 0; i < net.n; ++i){
-        printf("Forwarding loop %d\n", i);
+        //printf("Forwarding loop %d\n", i);
         state.index = i;
         layer l = net.layers[i];
         if(l.delta && state.train){
@@ -264,10 +264,10 @@ void forward_network(network net, network_state state)
             printf("done scal_cpu \n");
         }
         //double time = get_time_point();
-        printf("running l.forward \n");
+        //printf("running l.forward \n");
         l.forward(l, state);
         //printf("%d - Predicted in %lf milli-seconds.\n", i, ((double)get_time_point() - time) / 1000);
-        printf("done l.forward \n");
+        //printf("done l.forward \n");
         state.input = l.output;
     }
 }
@@ -678,7 +678,7 @@ float *network_predict(network net, float *input)
 #ifdef GPU
     if(gpu_index >= 0)  return network_predict_gpu(net, input);
 #endif
-    printf("predict!\n");
+    //printf("predict!\n");
     network_state state;
     state.net = net;
     state.index = 0;
@@ -686,11 +686,11 @@ float *network_predict(network net, float *input)
     state.truth = 0;
     state.train = 0;
     state.delta = 0;
-    printf("forwarding network!\n");
+//    printf("forwarding network!\n");
     forward_network(net, state);
-    printf("running get_network_output!\n");
+    //printf("running get_network_output!\n");
     float *out = get_network_output(net);
-    printf("done predict!\n");
+    //printf("done predict!\n");
     return out;
 }
 

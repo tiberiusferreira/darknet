@@ -356,13 +356,13 @@ pub extern "C" fn gemm_nn_rust_unsafe_reddit_c(m: usize, n: usize, k: usize, alp
 //        c_n[index] = *value;
 //    }
 
-    println!("lda = {:?}", lda);
-    println!("ldb = {:?}", ldb);
-    println!("ldc = {:?}", ldc);
-    println!("m = {:?}", m);
-    println!("n = {:?}", n);
-    println!("k = {:?}", k);
-    println!("alpha = {:?}", alpha);
+//    println!("lda = {:?}", lda);
+//    println!("ldb = {:?}", ldb);
+//    println!("ldc = {:?}", ldc);
+//    println!("m = {:?}", m);
+//    println!("n = {:?}", n);
+//    println!("k = {:?}", k);
+//    println!("alpha = {:?}", alpha);
     unsafe {
 
         cblas::sgemm(Layout::RowMajor, Transpose::None, Transpose::None, m as i32, n as i32  , k as i32,
@@ -371,7 +371,6 @@ pub extern "C" fn gemm_nn_rust_unsafe_reddit_c(m: usize, n: usize, k: usize, alp
 //                              ldb as isize, 1 as isize, 1.0, c, ldc as isize, 1 as isize);
     }
 
-    println!("{:?}", c_n[0]);
 
 
 

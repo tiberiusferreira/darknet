@@ -2896,7 +2896,7 @@ void gemm_cpu(int TA, int TB, int M, int N, int K, float ALPHA,
     t = clock() - t;
     double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
 
-    printf("Time inside loop: %f\n", time_taken);
+//    printf("Time inside loop: %f\n", time_taken);
 }
 
 #ifdef GPU

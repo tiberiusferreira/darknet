@@ -1179,7 +1179,7 @@ void forward_convolutional_layer(convolutional_layer l, network_state state)
     t = clock() - t;
     double time_taken = ((double)t)/CLOCKS_PER_SEC; // in seconds
 
-    printf("Time inside forward_convolutional_layer loop: %f\n", time_taken);
+    //printf("Time inside forward_convolutional_layer loop: %f\n", time_taken);
 }
 
 void assisted_excitation_forward(convolutional_layer l, network_state state)
