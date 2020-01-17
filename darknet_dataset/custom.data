@@ -1,0 +1,5 @@
+classes = 1
+train  = darknet_dataset/custom_train.txt
+valid  = darknet_dataset/custom_test.txt
+names = darknet_dataset/custom.names
+backup = backup/
